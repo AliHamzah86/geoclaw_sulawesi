@@ -1,8 +1,8 @@
 
 """
-Run this code to make fine_runs or coarse_runs npy files
-from the fgmax and gauge files stored from each run.  
-
+Run this code to make fine_runs and coarse_runs npy files
+from the fgmax stored from each run.  
+Can also make npy files for gauges, not currently used.
 """
 
 from pylab import *
@@ -95,7 +95,8 @@ for resolution in resolution_list:
 
             for fgno in [1,2,3]:
                 fg = fgmax_tools.FGmaxGrid()
-                fg.read_input_data('fgmax%s_%s.txt' % (fgno, resolution))
+                fgmax_input = '../geoclaw_driver/fgmax%s_%s.txt' % (fgno,resolution)
+                fg.read_input_data(fgmax_input)
                 fg.read_output(fgno,os.path.join(fullrundir,'_output'))
                 hmax = reshape(fg.h, -1, order='F')  # as 1d array
                 fname = os.path.join(newrundir, 'hmax_fg%s.npy' % fgno)

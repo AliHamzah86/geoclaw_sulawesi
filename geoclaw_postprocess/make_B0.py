@@ -21,7 +21,7 @@ for resolution in resolution_list:
 
     for fgno in [1,2,3]:
         run_fg = fgmax_tools.FGmaxGrid()
-        fgmax_input = 'fgmax%s_%s.txt' % (fgno,resolution)
+        fgmax_input = '../geoclaw_driver/fgmax%s_%s.txt' % (fgno,resolution)
         run_fg.read_input_data(fgmax_input)
         outdir = os.path.join(B0dir, '_output')
         run_fg.read_output(fgno, outdir)
