@@ -43,3 +43,7 @@ Use the code in directory `geoclaw_analysis` to plot the results from the GeoCla
 
 See `geoclaw_analysis/README.md` for instructions.
  
+### Step 5:
+
+Use the code in directory `hazard_products` to produce compute hazard curves and maps.  This step uses the clusters determined in Step 4.
+ 
