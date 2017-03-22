@@ -30,9 +30,9 @@ geoclaw_output = os.path.abspath('../geoclaw_output')
 os.chdir(geoclaw_output)
 print "Working in directory: ", geoclaw_output
 
-os.system('mkdir -p all_runs_dir')
 
-all_runs_dir = os.path.abspath('all_runs_npy_files')
+all_runs_dir = 'all_runs_npy_files'
+os.system('mkdir -p %s' % all_runs_dir)
 
 # Crescent City location:
 xcc = -124.1838
