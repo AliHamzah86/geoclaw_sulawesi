@@ -1,14 +1,30 @@
-# PTHA for Crescent City with events from Southern portion of CSZ #
+# Generate GeoClaw output to be used for source filtering #
 
+This directory contains python scripts that will perform 802 geoclaw runs,
+each with different earthquake events in the southern portion of the
+Cascadia Subduction Zone, ranging from magnitude 8.6 to 9.2.
 
-To generate 802 geoclaw runs in the directory `../geoclaw_output`, do
+## Generating random earthquakes
+
+Parameters for the random earthquake events generated for this report are
+stored in `scenario_pts.txt` and `scenario_prb_wgts.txt`.
+The code that generated these events are demonstrated in the IPython notebook
+`Scenario_generation_PTHA.ipynb`.
+
+## Perform Geoclaw runs
+To start the run
 ```
 $ python run_CC_CSZ_South.py
 ```
+The outputs will be organized in `../geoclaw_output` directory.
+For example, magnitude 8.8 event number 10 computed with a coarse grid
+will be stored in
+```
+../geoclaw_output/coarse_8.8/run_10
+```
 
+## Generate plots for each event
 To create plots for each of these runs, do
 ```
-$ python make make_plots_all.py
+$ python make_plots_all.py
 ```
-
-
