@@ -28,6 +28,8 @@ If you want to download the results for Steps 1 and 2 as computed for this repor
 
     source rsync_all_runs.sh
 
+Note the total file size is about 787M.
+
 Or, if you ran the GeoClaw simulations on one computer (e.g. in the cloud) and now want to do the analysis and plotting steps below on a different computer (e.g. your laptop), then you can modify the file `rsync_all_runs.sh` to point to the computer where the runs were performed and then do:
 
     source rsync_all_runs.sh
