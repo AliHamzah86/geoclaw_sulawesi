@@ -24,3 +24,6 @@ The output will be stored in a subdirectory `_output`. This includes
   the similarity of the coarse and the fine grid SVDs.
 - coefficient plots of the transform matrices `Y_transform_8.8.png`
   for each magnitude.
+- saved numpy array of all generated maps `hazardcurves_probs.npy`
+- summary of errors `output_error.txt`
+- pickled fixed-grid data `data.pkl`
