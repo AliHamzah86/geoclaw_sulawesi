@@ -11,7 +11,29 @@ stored in `scenario_pts.txt` and `scenario_prb_wgts.txt`.
 The code that generated these events are demonstrated in the IPython notebook
 `Scenario_generation_PTHA.ipynb`.
 
+## Install GeoClaw
+
+See http://www.clawpack.org/installing.html for general instructions to install Clawpack, 
+which includes GeoClaw.  Version 5.4.0 was used for the original runs.
+
+## Adjust the Makefile
+
+Set the `FFLAGS` in the `Makefile` to be appropriate for your compiler.
+You probably want to use OpenMP parallelism if possible.
+
+## Fetch topography DEMs
+
+In this directory:
+
+```
+$ source get_topo.sh
+```
+
 ## Perform Geoclaw runs
+
+**Note:** This will perform 400 coarse grid and 400 fine grid runs and will take
+several days or weeks to run depending on how many cores are being used...
+
 To start the run
 ```
 $ python run_CC_CSZ_South.py
