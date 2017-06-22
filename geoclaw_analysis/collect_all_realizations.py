@@ -6,6 +6,8 @@ TODO:  dtopo_plot.png and subfaults_plot.png must be moved from
 each geoclaw_output run directory to the png_files directory.
 
 """
+import os
+
 png_files = os.path.abspath('../png_files')
 
 

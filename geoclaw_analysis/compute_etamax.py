@@ -12,7 +12,7 @@ resolution_list = ['coarse','fine']
 Mw_list = ['8.6', '8.8','9.0','9.2']
 run_list = range(100)
 
-if 1:
+if 0:
     # for testing:
     resolution_list = ['coarse']
     Mw_list = ['9.0']

@@ -3,12 +3,19 @@ k-means clustering based on cluster_vars, e.g.
 dtopo_proxies or coarse_mod_eta
 """
 
+import matplotlib
+matplotlib.use('Agg')  # for non-interactive
+
 from pylab import *
-from sklearn.cluster import KMeans
 
-all_runs_dir = '../redclaw_1106/all_runs_npy_files'
+try:
+    from sklearn.cluster import KMeans
+except:
+    print "You need to install sklearn first"
 
-run_probs = loadtxt('../scenario_prb_wgts.txt')  # 100 weights for each runno
+all_runs_dir = '../geoclaw_output/all_runs_npy_files'
+
+run_probs = loadtxt('../geoclaw_driver/scenario_prb_wgts.txt')  # 100 weights for each runno
 
 # Relative weight for each Magnitude:
 Mw_weights = {8.6:0.3, 8.8:0.3, 9.0:0.3, 9.2:0.1}

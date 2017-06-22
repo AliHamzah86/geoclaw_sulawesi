@@ -3,6 +3,9 @@ Plot all the transect cross sections together.
 
 """
 
+import matplotlib
+matplotlib.use('Agg')  # for non-interactive
+
 from pylab import *
 import os,sys
 

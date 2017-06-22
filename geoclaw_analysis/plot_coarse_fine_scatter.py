@@ -5,6 +5,9 @@ Need to first run compute_etamax.py
 to create files with etamin, etamean, etamax
 """
 
+import matplotlib
+matplotlib.use('Agg')  # for non-interactive
+
 from pylab import *
 import os
 
