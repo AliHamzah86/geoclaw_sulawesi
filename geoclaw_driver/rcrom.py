@@ -186,7 +186,7 @@ class Drom(object):
             if not os.path.exists(exe_source):
                 os.system('mkdir -p ' + self.path_common)
                 os.system('cp Makefile ' + self.path_common)
-                os.system('cd ' + self.path_common + '; ' + 'make .exe')
+                os.system('cd ' + self.path_common + '; ' + 'make new')
                 
             os.system('ln -s ' + os.path.relpath(exe_source,rundir) + ' '+ os.path.join(rundir,'xgeoclaw'))
 
