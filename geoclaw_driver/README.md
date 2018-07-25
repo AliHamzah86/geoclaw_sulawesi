@@ -26,7 +26,7 @@ You probably want to use OpenMP parallelism if possible.
 In this directory:
 
 ```
-$ source get_topo.sh
+$ source ../DataFiles/get_topo.sh
 ```
 
 ## Perform Geoclaw runs
