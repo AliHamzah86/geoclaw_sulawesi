@@ -49,6 +49,7 @@ MAG_OUTPUT_DIR = {
     9.0: 'Mw_90',
 }
 
+<<<<<<< HEAD
 
 def magnitude_tag(mw):
     return MAG_OUTPUT_DIR[mw]
@@ -63,13 +64,24 @@ def format_run_tag(mw, scenario_index, run_id):
 #
 #    setrun
 #    setgeo
+=======
+# ==============================================================================
+# setrun, setgeo for the coarse grid runs are defined in setrun.py
+#
+#    setrun_coarse
+#    setgeo_coarse
+>>>>>>> 13de74e (Simplifikasi fema-filter untuk coars)
 #
 # these set as the default template, then the iteration function for the
 # GeoClawInput class is used to appropriately change the settings,
 # e.g., fine grid runs, earthquake magnitudes, run to final time, etc.
 # ==============================================================================
 
+<<<<<<< HEAD
 from setrun import setrun, setgeo
+=======
+from setrun import setrun_coarse, setgeo_coarse
+>>>>>>> 13de74e (Simplifikasi fema-filter untuk coars)
 
 # ==============================================================================
 # Fault configuration constants and helpers
@@ -148,6 +160,10 @@ def describe_run(run_id, M):
     total_runs = len(MAGNITUDES) * M
     metadata = {
         "run_id": run_id,
+<<<<<<< HEAD
+=======
+        "grid": "coarse",
+>>>>>>> 13de74e (Simplifikasi fema-filter untuk coars)
         "mw": 0.0,
         "scenario": None,
         "rundir": None,
@@ -163,11 +179,17 @@ def describe_run(run_id, M):
 
     metadata["scenario"] = scenario_index
     metadata["mw"] = Mw
+<<<<<<< HEAD
     metadata["mag_tag"] = magnitude_tag(Mw)
     metadata["tag"] = format_run_tag(Mw, scenario_index, run_id)
 
     label = f"Mw {Mw:.1f}"
     out_dir = os.path.join(OUTPUT_BASE, metadata["mag_tag"])
+=======
+
+    label = f"Mw {Mw:.1f}"
+    out_dir = os.path.join(OUTPUT_BASE, MAG_OUTPUT_DIR[Mw])
+>>>>>>> 13de74e (Simplifikasi fema-filter untuk coars)
     metadata["label"] = label
     metadata["rundir"] = os.path.join(out_dir, f"run_{scenario_index}")
 
@@ -176,7 +198,11 @@ def describe_run(run_id, M):
 
 def parse_cli_args():
     parser = argparse.ArgumentParser(
+<<<<<<< HEAD
         description="Run GeoClaw scenarios in test or full mode."
+=======
+        description="Run GeoClaw CC CSZ South scenarios in test or full mode (coarse only)."
+>>>>>>> 13de74e (Simplifikasi fema-filter untuk coars)
     )
     parser.add_argument(
         "--mode",
@@ -294,6 +320,7 @@ def iter_fun(self):
         raise StopIteration()
 
     else:
+<<<<<<< HEAD
         run_id_mod = run_id % M
         mag_index = run_id // M
         self.KL_Mw_desired = MAGNITUDES[mag_index]
@@ -301,20 +328,40 @@ def iter_fun(self):
 
         #=========================
         # set grid configurations
+=======
+        
+        #=========================
+        # set coarse and fine grids
+>>>>>>> 13de74e (Simplifikasi fema-filter untuk coars)
         #
         t_shelf = 0.   # time approaching continental slope
         t_harbor = 0.  # time approaching harbor
 
+<<<<<<< HEAD
         self._rundata = setrun(setgeo)   # includes fgmax setup
 
         self._rundata.amrdata.amr_levels_max = 4
         # grid run = 10sec
+=======
+        #------------------
+        # setrun for coarse grid only
+        #
+        grid = 'coarse'
+        self._rundata = setrun_coarse(setgeo_coarse)   # includes fgmax setup
+
+        self._rundata.amrdata.amr_levels_max = 4
+        # coarse grid run = 10sec
+>>>>>>> 13de74e (Simplifikasi fema-filter untuk coars)
         # dx = 30min, 5min, 1min, 10sec
         self._rundata.amrdata.refinement_ratios_x = [6, 5, 6]
         self._rundata.amrdata.refinement_ratios_y = [6, 5, 6]
         self._rundata.amrdata.refinement_ratios_t = [6, 5, 6]
 
+<<<<<<< HEAD
         # add topography
+=======
+        # add topography (coarse)
+>>>>>>> 13de74e (Simplifikasi fema-filter untuk coars)
         topofiles = self._rundata.topo_data.topofiles
         # for topography, append lines of the form
         #    [topotype, minlevel, maxlevel, t1, t2, fname]
@@ -340,23 +387,48 @@ def iter_fun(self):
         # check that topo files exist
         for _, _, _, _, _, f in topofiles:
             if not os.path.exists(f):
+<<<<<<< HEAD
                 print(f"{run_tag} | missing topography file: {f}")
                 raise FileNotFoundError(f)
 
+=======
+                print(f"[FATAL] Topography file missing: {f}")
+                raise FileNotFoundError(f)
+
+            
+        #
+        # set desired magnitude
+        #
+        mag_index = run_id // M
+        self.KL_Mw_desired = MAGNITUDES[mag_index]
+        
+>>>>>>> 13de74e (Simplifikasi fema-filter untuk coars)
         #
         # set slip distribution
         #
         # run_id_mod = run_id - 100*(run_id/100)
+<<<<<<< HEAD
         m = scn_list[run_id_mod]
         self.set_KL_slip(m)
     
         dir_grid_Mw = os.path.join(OUTPUT_BASE, magnitude_tag(self.KL_Mw_desired))
+=======
+        run_id_mod = run_id % M  # stay within available scenarios
+        m = scn_list[run_id_mod]
+        self.set_KL_slip(m)
+
+        dir_grid_Mw = os.path.join(OUTPUT_BASE, MAG_OUTPUT_DIR[self.KL_Mw_desired])
+>>>>>>> 13de74e (Simplifikasi fema-filter untuk coars)
         os.makedirs(dir_grid_Mw, exist_ok=True)
         self._rundir = os.path.join(dir_grid_Mw, 'run_' + str(run_id_mod))
         
         # --- Compact progress info (after Mw assigned) ---
         if getattr(self, "_progress_enabled", True):
+<<<<<<< HEAD
             print(f"{run_tag} scheduled ({run_id + 1}/{N})")
+=======
+            print(f"[INFO] Case {run_id + 1} / {N} | run_id = {run_id} | Mw = {self.KL_Mw_desired}")
+>>>>>>> 13de74e (Simplifikasi fema-filter untuk coars)
             
         self._run_id += 1
         
@@ -368,7 +440,11 @@ def create_configured_drom(scenario_points):
     drom = rcrom.Drom()
     drom.GeoClawInput.fault = copy.deepcopy(get_fault())
     drom.GeoClawInput.set_iter(iter_fun)
+<<<<<<< HEAD
     drom.GeoClawInput.set_rundata(setrun=setrun, setgeo=setgeo)
+=======
+    drom.GeoClawInput.set_rundata(setrun=setrun_coarse, setgeo=setgeo_coarse)
+>>>>>>> 13de74e (Simplifikasi fema-filter untuk coars)
     drom.GeoClawInput.KL_expand(Lstrike=LSTRIKE, Ldip=LDIP,
                 distribution='Lognormal', tau=depth_taper,
                 nterms=20, KL_Mw_desired=9.0)
@@ -391,7 +467,10 @@ def run_cases_sequential(run_ids, driver_path, scenario_points):
         pass
 
     drom = create_configured_drom(scenario_points)
+<<<<<<< HEAD
     scenario_count = len(scenario_points) if scenario_points is not None else 0
+=======
+>>>>>>> 13de74e (Simplifikasi fema-filter untuk coars)
     drom.GeoClawInput._progress_enabled = False
 
     for geoinput in drom.GeoClawInput:
@@ -402,8 +481,11 @@ def run_cases_sequential(run_ids, driver_path, scenario_points):
 
         run_dir = geoinput._rundir
         Mw = geoinput.KL_Mw_desired
+<<<<<<< HEAD
         run_id_mod = current_id % scenario_count if scenario_count else current_id
         run_tag = format_run_tag(Mw, run_id_mod, current_id)
+=======
+>>>>>>> 13de74e (Simplifikasi fema-filter untuk coars)
 
         orig_geo_id = drom.GeoClawInput._run_id
         orig_drom_id = drom._run_id
@@ -412,6 +494,7 @@ def run_cases_sequential(run_ids, driver_path, scenario_points):
 
         start = time.perf_counter()
         try:
+<<<<<<< HEAD
             drom.evaluate_hdm(run_tag=run_tag)
             duration = time.perf_counter() - start
             print(f"{run_tag} | completed in {format_duration(duration)}")
@@ -419,6 +502,18 @@ def run_cases_sequential(run_ids, driver_path, scenario_points):
         except Exception as exc:
             duration = time.perf_counter() - start
             print(f"{run_tag} | failed: {exc} ({format_duration(duration)})")
+=======
+            print(f"[RUN-{current_id:03d}] Starting GeoClaw in {run_dir} (Mw={Mw})")
+            drom.evaluate_hdm()
+            duration = time.perf_counter() - start
+            print(f"[RUN-{current_id:03d}] Completed successfully in {run_dir} "
+                  f"({format_duration(duration)})")
+            results.append((current_id, "OK", duration))
+        except Exception as exc:
+            duration = time.perf_counter() - start
+            print(f"[RUN-{current_id:03d}] FAILED in {run_dir}: {exc} "
+                  f"({format_duration(duration)})")
+>>>>>>> 13de74e (Simplifikasi fema-filter untuk coars)
             results.append((current_id, f"FAIL: {exc}", duration))
         finally:
             drom.GeoClawInput._run_id = orig_geo_id
@@ -456,7 +551,11 @@ if __name__=='__main__':
     try:
         scn = np.loadtxt(scn_path)
     except OSError as err:
+<<<<<<< HEAD
         print(f"Error reading scenario file {scn_path}: {err}")
+=======
+        print(f"[ERROR] Failed to read scenario file {scn_path}: {err}")
+>>>>>>> 13de74e (Simplifikasi fema-filter untuk coars)
         sys.exit(1)
 
     if isinstance(scn, np.ndarray):
@@ -471,7 +570,11 @@ if __name__=='__main__':
 
     M = len(scn_list)
     if M == 0:
+<<<<<<< HEAD
         print("Error: scenario list is empty.")
+=======
+        print("[ERROR] Scenario list is empty.")
+>>>>>>> 13de74e (Simplifikasi fema-filter untuk coars)
         sys.exit(1)
 
     total_runs = len(MAGNITUDES) * M
@@ -480,11 +583,20 @@ if __name__=='__main__':
     if args.mode == "test":
         ntest = max(1, min(args.n_test, total_runs))
         selected_run_ids, mag_counts = select_balanced_test_runs(M, ntest)
+<<<<<<< HEAD
         count_text = ", ".join(f"{magnitude_tag(mw)}: {cnt}" for mw, cnt in sorted(mag_counts.items()))
         print(f"Mode test | {len(selected_run_ids)} run(s) selected [{count_text}]")
     else:
         selected_run_ids = all_run_ids
         print(f"Mode all | scheduling {total_runs} run(s).")
+=======
+        count_text = ", ".join(f"Mw {mw:.1f}: {cnt}" for mw, cnt in sorted(mag_counts.items()))
+        print(f"[INFO] Test mode: selected {len(selected_run_ids)} run(s) "
+              f"with distribution [{count_text}]")
+    else:
+        selected_run_ids = all_run_ids
+        print(f"[INFO] All mode: scheduling all {total_runs} run(s).")
+>>>>>>> 13de74e (Simplifikasi fema-filter untuk coars)
 
     required_dirs = {os.path.join(OUTPUT_BASE, 'common')}
     required_dirs.update(os.path.join(OUTPUT_BASE, name) for name in MAG_OUTPUT_DIR.values())
@@ -492,6 +604,7 @@ if __name__=='__main__':
         os.makedirs(path, exist_ok=True)
 
     if not selected_run_ids:
+<<<<<<< HEAD
         print("Error: no runs selected.")
         sys.exit(1)
 
@@ -499,23 +612,48 @@ if __name__=='__main__':
     for rid in selected_run_ids:
         meta = describe_run(rid, M)
         print(f"  {meta['tag']} | directory {meta['rundir']}")
+=======
+        print("[ERROR] No runs selected.")
+        sys.exit(1)
+
+    print("[PLAN] Scheduled runs:")
+    for rid in selected_run_ids:
+        meta = describe_run(rid, M)
+        scenario_str = "-" if meta["scenario"] is None else str(meta["scenario"])
+        print(f"  - run_id {rid:03d} | grid={meta['grid']:<6} | label={meta['label']:<6} "
+              f"| scenario={scenario_str:<3} | rundir={meta['rundir']}")
+>>>>>>> 13de74e (Simplifikasi fema-filter untuk coars)
 
     cpu_count = mp.cpu_count()
     max_workers = args.processes if args.processes is not None else min(8, cpu_count)
     if max_workers <= 0:
+<<<<<<< HEAD
         print("Error: number of processes must be positive.")
+=======
+        print("[ERROR] Number of processes must be positive.")
+>>>>>>> 13de74e (Simplifikasi fema-filter untuk coars)
         sys.exit(1)
 
     run_chunks = chunk_run_ids(selected_run_ids, max_workers)
     if not run_chunks:
+<<<<<<< HEAD
         print("Error: failed to partition run IDs for execution.")
+=======
+        print("[ERROR] Failed to partition run IDs for parallel execution.")
+>>>>>>> 13de74e (Simplifikasi fema-filter untuk coars)
         sys.exit(1)
 
     actual_workers = len(run_chunks)
     if actual_workers == 1:
+<<<<<<< HEAD
         print(f"Execution mode: sequential (CPU count {cpu_count}).")
     else:
         print(f"Execution mode: {actual_workers} workers (CPU count {cpu_count}).")
+=======
+        print(f"[INFO] Using sequential execution (CPU count: {cpu_count}).")
+    else:
+        print(f"[INFO] Using {actual_workers} parallel worker(s) (CPU count: {cpu_count}).")
+>>>>>>> 13de74e (Simplifikasi fema-filter untuk coars)
 
     worker_args = [(chunk, driver_home, scn_list) for chunk in run_chunks]
 
@@ -534,6 +672,7 @@ if __name__=='__main__':
     total_run_time = sum(duration for _, _, duration in flat_results)
     total_success_time = sum(duration for _, status, duration in flat_results if status == "OK")
 
+<<<<<<< HEAD
     mag_total = {mw: 0 for mw in MAGNITUDES}
     mag_success = {mw: 0 for mw in MAGNITUDES}
     for run_id, status, _ in flat_results:
@@ -566,4 +705,20 @@ if __name__=='__main__':
         success = mag_success.get(mw, 0)
         plural = "case" if total == 1 else "cases"
         print(f"    [{tag}]: {total} {plural} ({success} successful)")
+=======
+    print("\n[SUMMARY]")
+    print(f"  ✅ Successful runs: {ok}")
+    if failures:
+        for run_id, status, duration in sorted(failures):
+            print(f"  ❌ Run {run_id}: {status} ({format_duration(duration)})")
+    else:
+        print("  ❌ Failed runs: 0")
+    if skipped:
+        print(f"  [WARN] Skipped runs: {sorted(run_id for run_id, _, _ in skipped)}")
+    print(f"  ⏱ Total wall time: {format_duration(wall_total)}")
+    print(f"  ⏱ Sum of run durations: {format_duration(total_run_time)}")
+    if ok:
+        avg_duration = total_success_time / ok
+        print(f"  ⏱ Mean successful run: {format_duration(avg_duration)}")
+>>>>>>> 13de74e (Simplifikasi fema-filter untuk coars)
     print("--------------------------------------------------")

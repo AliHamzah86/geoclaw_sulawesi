@@ -247,6 +247,18 @@ def main() -> None:
                     if gaugenos:
                         print("Created gauge npy files")
 
+def discover_magnitude_dirs(resolution: str, magnitude_filter: Optional[Sequence[str]]) -> List[Tuple[str, str]]:
+    entries = []
+    for entry in os.listdir('.'):
+        if not entry.startswith(f"{resolution}_"):
+            continue
+        suffix = entry[len(resolution) + 1:]
+        if suffix.upper() == 'B0':
+            continue
+        if magnitude_filter and suffix not in magnitude_filter:
+            continue
+        if os.path.isdir(entry):
+            entries.append((suffix, entry))
 
 if __name__ == '__main__':
     main()
