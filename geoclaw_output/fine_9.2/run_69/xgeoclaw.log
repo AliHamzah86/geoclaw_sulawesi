@@ -1,0 +1,9 @@
+rm -f .output
+python /home/aila/clawpack_src/src/clawpack/clawutil/src/python/clawutil/runclaw.py xgeoclaw                  _output                \
+True False . False False None 
+==> runclaw: Will take data from  /home/aila/clawpack_src/sulawesi_source_filter/geoclaw_output/fine_9.2/run_69
+==> runclaw: Will write output to  /home/aila/clawpack_src/sulawesi_source_filter/geoclaw_output/fine_9.2/run_69/_output
+==> runclaw: Removing all old fort/gauge files in  /home/aila/clawpack_src/sulawesi_source_filter/geoclaw_output/fine_9.2/run_69/_output
+
+==> Running with command:
+    /home/aila/clawpack_src/sulawesi_source_filter/geoclaw_output/fine_9.2/run_69/xgeoclaw

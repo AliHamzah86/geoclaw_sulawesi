@@ -40,6 +40,6 @@ for Mw in [8.6,8.8,9.0,9.2]:
 html.write('</html>\n')
 html.close()
 
-print "Created %s" % html_file
-print "Move this file to the png_files directory to view"
+print ("Created %s" % html_file)
+print ("Move this file to the png_files directory to view")
 

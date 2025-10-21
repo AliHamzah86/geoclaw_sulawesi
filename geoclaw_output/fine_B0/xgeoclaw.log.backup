@@ -1,0 +1,114 @@
+rm -f .output
+python /home/aila/clawpack_src/src/clawpack/clawutil/src/python/clawutil/runclaw.py xgeoclaw                  _output                \
+True False . False False None 
+Reading data file: claw.data
+         first 5 lines are comments and will be skipped
+Reading data file: amr.data
+         first 5 lines are comments and will be skipped
+  
+ Running amrclaw ...  
+  
+Reading data file: geoclaw.data
+         first 5 lines are comments and will be skipped
+Reading data file: refinement.data
+         first 5 lines are comments and will be skipped
+Reading data file: dtopo.data
+         first 5 lines are comments and will be skipped
+Reading data file: topo.data
+         first 5 lines are comments and will be skipped
+ *** in file: /home/aila/clawpack_src/sulawesi_source_filter/geoclaw_driver/DataFiles/etopo1_-130_-124_38_45_1min.asc
+     Shifting xllcorner by 0.5*dx to cell center
+ *** in file: /home/aila/clawpack_src/sulawesi_source_filter/geoclaw_driver/DataFiles/etopo1_-130_-124_38_45_1min.asc
+     Shifting yllcorner by 0.5*dy to cell center
+  
+ Reading topography file  /home/aila/clawpack_src/sulawesi_source_filter/geoclaw_driver/DataFiles/etopo1_-130_-124_38_45_1min.asc                                               
+  
+ Reading topography file  /home/aila/clawpack_src/sulawesi_source_filter/geoclaw_driver/DataFiles/cc-1sec.asc                                                                   
+Reading data file: qinit.data
+         first 5 lines are comments and will be skipped
+   qinit_type = 0, no perturbation
+Reading data file: fgout_grids.data
+         first 5 lines are comments and will be skipped
+Reading data file: friction.data
+         first 5 lines are comments and will be skipped
+Reading data file: multilayer.data
+         first 5 lines are comments and will be skipped
+Reading data file: surge.data
+         first 5 lines are comments and will be skipped
+Reading data file: regions.data
+         first 5 lines are comments and will be skipped
+Reading data file: flagregions.data
+         first 5 lines are comments and will be skipped
+Reading data file: gauges.data
+         first 5 lines are comments and will be skipped
+Reading data file: fgmax_grids.data
+         first 5 lines are comments and will be skipped
+ +++ fgbb:   -124.21200000000000       -124.18600000000001        41.734999999999999        41.766199999999998     
+ +++ fgll:    0.0000000000000000        0.0000000000000000                0           0
+ +++ fg%x(npts), fg%y(1):   -124.21200000000000        41.734999999999999     
+ +++ fgbb:   -124.20500000000000       -124.17900000000000        41.734999999999999        41.766199999999998     
+ +++ fgll:    0.0000000000000000        0.0000000000000000                0           0
+ +++ fg%x(npts), fg%y(1):   -124.20500000000000        41.734999999999999     
+ +++ fgbb:   -124.21402778000000       -124.18986111000000        41.744861110999999        41.766249999999999     
+ +++ fgll:   -124.21402778000000        41.744861110999999               88          78
+ +++ fg%x(npts), fg%y(1):   -124.18986111000000        41.744861110999999     
+Reading data file: adjoint.data
+         first 5 lines are comments and will be skipped
+ rnode allocated...
+ node allocated...
+ listOfGrids allocated...
+ Storage allocated...
+ bndList allocated...
+Gridding level   1 at t =  0.000000E+00:     1 grids with          24 cells
+   Setting initial dt to    1.0000000000000000     
+  max threads set to            2
+  
+ Done reading data, starting computation ...  
+  
+ Total mass at initial time:    484888349497120.62     
+GEOCLAW: Frame    1 output files done at time t =  0.100000D+01
+
+GEOCLAW: Frame    2 output files done at time t =  0.300000D+01
+
+ Done integrating to time    3.0000000000000000     
+ Writing to file fgmax0001.txt                 
+ Writing to file fgmax0002.txt                 
+ Writing to file fgmax0003.txt                 
+See fort.amr for more info on this run and memory usage
+
+============================== Timing Data ==============================
+
+Integration Time (stepgrid + BC + overhead)
+Level           Wall Time (seconds)    CPU Time (seconds)   Total Cell Updates
+  1                     1.493                  0.495            0.480E+02
+  2                     6.137                  2.019            0.691E+04
+  3                    12.717                  4.338            0.165E+05
+  4                    10.199                  4.495            0.305E+06
+  5                     2.642                  1.358            0.601E+06
+  6                     2.993                  1.527            0.104E+07
+total                  36.181                 14.231            0.197E+07
+
+All levels:
+stepgrid               33.129                 12.812    
+BC/ghost cells          3.036                  1.412
+Regridding              2.616                  1.299  
+Output (valout)         0.862                  0.263  
+
+Total time:            41.267                 16.615  
+Using  2 thread(s)
+
+Note: The CPU times are summed over all threads.
+      Total time includes more than the subroutines listed above
+Note: timings are also recorded for each output step
+      in the file timing.csv.
+
+=========================================================================
+
+==> runclaw: Will take data from  /home/aila/clawpack_src/sulawesi_source_filter/geoclaw_output/fine_B0
+==> runclaw: Will write output to  /home/aila/clawpack_src/sulawesi_source_filter/geoclaw_output/fine_B0/_output
+==> runclaw: Removing all old fort/gauge files in  /home/aila/clawpack_src/sulawesi_source_filter/geoclaw_output/fine_B0/_output
+
+==> Running with command:
+    /home/aila/clawpack_src/sulawesi_source_filter/geoclaw_output/fine_B0/xgeoclaw
+==> runclaw: Done executing /home/aila/clawpack_src/sulawesi_source_filter/geoclaw_output/fine_B0/xgeoclaw via clawutil.runclaw.py
+==> runclaw: Output is in  /home/aila/clawpack_src/sulawesi_source_filter/geoclaw_output/fine_B0/_output

@@ -1,0 +1,94 @@
+rm -f .output
+python /home/aila/clawpack_src/src/clawpack/clawutil/src/python/clawutil/runclaw.py xgeoclaw                  _output                \
+True False . False False None 
+Reading data file: claw.data
+         first 5 lines are comments and will be skipped
+Reading data file: amr.data
+         first 5 lines are comments and will be skipped
+  
+ Running amrclaw ...  
+  
+Reading data file: geoclaw.data
+         first 5 lines are comments and will be skipped
+Reading data file: refinement.data
+         first 5 lines are comments and will be skipped
+Reading data file: dtopo.data
+         first 5 lines are comments and will be skipped
+Reading data file: topo.data
+         first 5 lines are comments and will be skipped
+ *** in file: /home/aila/clawpack_src/sulawesi_source_filter/geoclaw_driver/DataFiles/etopo1_-130_-124_38_45_1min.asc
+     Shifting xllcorner by 0.5*dx to cell center
+ *** in file: /home/aila/clawpack_src/sulawesi_source_filter/geoclaw_driver/DataFiles/etopo1_-130_-124_38_45_1min.asc
+     Shifting yllcorner by 0.5*dy to cell center
+  
+ Reading topography file  /home/aila/clawpack_src/sulawesi_source_filter/geoclaw_driver/DataFiles/etopo1_-130_-124_38_45_1min.asc                                               
+  
+ Reading topography file  /home/aila/clawpack_src/sulawesi_source_filter/geoclaw_driver/DataFiles/cc-1sec.asc                                                                   
+Reading data file: qinit.data
+         first 5 lines are comments and will be skipped
+   qinit_type = 0, no perturbation
+Reading data file: fgout_grids.data
+         first 5 lines are comments and will be skipped
+Reading data file: friction.data
+         first 5 lines are comments and will be skipped
+Reading data file: multilayer.data
+         first 5 lines are comments and will be skipped
+Reading data file: surge.data
+         first 5 lines are comments and will be skipped
+Reading data file: regions.data
+         first 5 lines are comments and will be skipped
+Reading data file: flagregions.data
+         first 5 lines are comments and will be skipped
+Reading data file: gauges.data
+         first 5 lines are comments and will be skipped
+Reading data file: fgmax_grids.data
+         first 5 lines are comments and will be skipped
+ +++ fgbb:   -124.21200000000000       -124.18600000000001        41.734999999999999        41.766199999999998     
+ +++ fgll:    0.0000000000000000        0.0000000000000000                0           0
+ +++ fg%x(npts), fg%y(1):   -124.21200000000000        41.734999999999999     
+ +++ fgbb:   -124.20500000000000       -124.17900000000000        41.734999999999999        41.766199999999998     
+ +++ fgll:    0.0000000000000000        0.0000000000000000                0           0
+ +++ fg%x(npts), fg%y(1):   -124.20500000000000        41.734999999999999     
+ +++ fgbb:   -124.21402778000000       -124.18986111000000        41.744861110999999        41.766249999999999     
+ +++ fgll:   -124.21402778000000        41.744861110999999               88          78
+ +++ fg%x(npts), fg%y(1):   -124.18986111000000        41.744861110999999     
+Reading data file: adjoint.data
+         first 5 lines are comments and will be skipped
+ rnode allocated...
+ node allocated...
+ listOfGrids allocated...
+ Storage allocated...
+ bndList allocated...
+Gridding level   1 at t =  0.000000E+00:     1 grids with          24 cells
+   Setting initial dt to    1.0000000000000000     
+  max threads set to            2
+  
+ Done reading data, starting computation ...  
+  
+ Total mass at initial time:    484888349497120.62     
+GEOCLAW: Frame    1 output files done at time t =  0.200000D+01
+
+ ***adjusting timestep for level   4 at t =     0.200000D+01
+     old ntogo dt           1   3.7279192363152855     
+     NEW ntogo dt            2   1.8639596181576366     
+  require       4080 words - either none left or not big  enough space
+ free list: 
+
+           0             0
+       15493           108
+       29149           126
+      120313           280
+      225605           720
+     4191773          2531
+     4194305             0
+
+ Expanding storage from      4194303  to      8388606
+GEOCLAW: Frame    2 output files done at time t =  0.600000D+03
+
+  require       6960 words - either none left or not big  enough space
+==> runclaw: Will take data from  /home/aila/clawpack_src/sulawesi_source_filter/geoclaw_output/coarse_9.0/run_74
+==> runclaw: Will write output to  /home/aila/clawpack_src/sulawesi_source_filter/geoclaw_output/coarse_9.0/run_74/_output
+==> runclaw: Removing all old fort/gauge files in  /home/aila/clawpack_src/sulawesi_source_filter/geoclaw_output/coarse_9.0/run_74/_output
+
+==> Running with command:
+    /home/aila/clawpack_src/sulawesi_source_filter/geoclaw_output/coarse_9.0/run_74/xgeoclaw

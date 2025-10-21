@@ -73,9 +73,13 @@ def setrun_coarse(setgeo,claw_pkg='geoclaw'):
     clawdata.lower[1] = 38.5          # ylower
     clawdata.upper[1] = 44.5          # yupper
     
-    # Number of grid cells:
-    clawdata.num_cells[0] =  8      # mx
-    clawdata.num_cells[1] = 12      # my
+    # # Number of grid cells:
+    # clawdata.num_cells[0] =  8      # mx
+    # clawdata.num_cells[1] = 12      # my
+
+    # test with very coarse grid
+    clawdata.num_cells[0] =  4      # mx
+    clawdata.num_cells[1] =  6      # my
     
 
     # ---------------
@@ -133,8 +137,9 @@ def setrun_coarse(setgeo,claw_pkg='geoclaw'):
         # default time and magnitude
         TMID = 600.
         TFINAL = 3600.*2.5
-        clawdata.output_times = [2.] + list(np.linspace(TMID,TFINAL,15))
- 
+        clawdata.output_times = [float(t) for t in ([2.0] + [float(tt) for tt in np.linspace(TMID, TFINAL, 15)])]
+
+
     elif clawdata.output_style == 3:
         # Output every step_interval timesteps over total_steps timesteps:
         clawdata.output_step_interval = 1
@@ -431,7 +436,7 @@ def setgeo_coarse(rundata):
     try:
         geo_data = rundata.geo_data
     except:
-        print "*** Error, this rundata has no geo_data attribute"
+        print ("*** Error, this rundata has no geo_data attribute")
         raise AttributeError("Missing geo_data attribute")
 
     # == Physics ==
@@ -455,6 +460,7 @@ def setgeo_coarse(rundata):
     refinement_data = rundata.refinement_data
     refinement_data.variable_dt_refinement_ratios = True
     refinement_data.wave_tolerance = 0.01
+    refinement_data.speed_tolerance = 0.0
     refinement_data.deep_depth = 100.0
     refinement_data.max_level_deep = 4
 
@@ -484,7 +490,6 @@ def setgeo_coarse(rundata):
     dtopofiles.append([dtopotype, 3, 3, \
             os.path.join(dtopodir,'dtopo.tt3')])
 
-
     # == setqinit.data values ==
     rundata.qinit_data.qinit_type =  0
     rundata.qinit_data.qinitfiles = []
@@ -492,24 +497,55 @@ def setgeo_coarse(rundata):
     # for qinit perturbations, append lines of the form: (<= 1 allowed for now!)
     #   [minlev, maxlev, fname]
 
-    # == fixedgrids.data values ==
-    rundata.fixed_grid_data.fixedgrids = []
-    fixedgrids = rundata.fixed_grid_data.fixedgrids
+    # == fixedgrids.data values ==   
+    # rundata.fixed_grid_data.fixedgrids = []
+    # fixedgrids = rundata.fixed_grid_data.fixedgrids
     # for fixed grids append lines of the form
     # [t1,t2,noutput,x1,x2,y1,y2,xpoints,ypoints,\
     #  ioutarrivaltimes,ioutsurfacemax]
 
     # == fgmax.data values ==
-    fgmax_files = rundata.fgmax_data.fgmax_files
+    # fgmax_files = rundata.fgmax_data.fgmax_files
+    # fgmax_grids = rundata.fgmax_data.fgmax_grids
     # for fixed grids append to this list names of any fgmax input files
-    fgmax1_fname = os.path.join(driver_home,'fgmax1_coarse.txt')
-    fgmax2_fname = os.path.join(driver_home,'fgmax2_coarse.txt')
-    fgmax3_fname = os.path.join(driver_home,'fgmax3_coarse.txt')
+    # fgmax1 = os.path.join(driver_home,'fgmax1_coarse.txt')
+    # fgmax2 = os.path.join(driver_home,'fgmax2_coarse.txt')
+    # fgmax3 = os.path.join(driver_home,'fgmax3_coarse.txt')
 
-    fgmax_files.append(fgmax1_fname)  
-    fgmax_files.append(fgmax2_fname)  
-    fgmax_files.append(fgmax3_fname)  
+    # fgmax1 = {'fgmax_input_file': os.path.join(driver_home, 'fgmax1_coarse.txt')}
+    # fgmax2 = {'fgmax_input_file': os.path.join(driver_home, 'fgmax2_coarse.txt')}
+    # fgmax3 = {'fgmax_input_file': os.path.join(driver_home, 'fgmax3_coarse.txt')}
+
+    # fgmax_files.append(fgmax1_fname)  
+    # fgmax_files.append(fgmax2_fname)  
+    # fgmax_files.append(fgmax3_fname) 
+
+    # fgmax_grids.append(fgmax1)
+    # fgmax_grids.append(fgmax2)
+    # fgmax_grids.append(fgmax3) 
     
+    # rundata.fgmax_data.num_fgmax_val = 2
+
+# -----------------------
+
+    from clawpack.geoclaw import fgmax_tools
+
+    fgmax_grids = rundata.fgmax_data.fgmax_grids
+
+    fgmax1 = fgmax_tools.FGmaxGrid()
+    # fgmax1.read_fgmax_txt(os.path.join(driver_home, 'fgmax1_coarse.txt'))
+    fgmax1.read_fgmax_grids_data(1, os.path.join(driver_home, 'fgmax1_coarse.txt'))
+    fgmax2 = fgmax_tools.FGmaxGrid()
+    # fgmax2.read_fgmax_txt(os.path.join(driver_home, 'fgmax2_coarse.txt'))
+    fgmax2.read_fgmax_grids_data(2, os.path.join(driver_home, 'fgmax2_coarse.txt'))
+    fgmax3 = fgmax_tools.FGmaxGrid()
+    # fgmax3.read_fgmax_txt(os.path.join(driver_home, 'fgmax3_coarse.txt'))
+    fgmax3.read_fgmax_grids_data(3, os.path.join(driver_home, 'fgmax3_coarse.txt'))
+
+    fgmax_grids.append(fgmax1)
+    fgmax_grids.append(fgmax2)
+    fgmax_grids.append(fgmax3)
+
     rundata.fgmax_data.num_fgmax_val = 2
 
 

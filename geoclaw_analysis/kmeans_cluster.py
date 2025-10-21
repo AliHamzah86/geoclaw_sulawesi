@@ -11,7 +11,7 @@ from pylab import *
 try:
     from sklearn.cluster import KMeans
 except:
-    print "You need to install sklearn first"
+    print ("You need to install sklearn first")
 
 all_runs_dir = '../geoclaw_output/all_runs_npy_files'
 
@@ -233,7 +233,7 @@ for cluster_vars in cluster_vars_list:
     if save_png:
         fname = 'clusters_%s.png' % scenario_name
         savefig(fname, bbox_inches='tight')
-        print 'Created ', fname
+        print ('Created ', fname)
 
     # Plot probabilities of each event and of clustered events:
 
@@ -251,7 +251,7 @@ for cluster_vars in cluster_vars_list:
     if save_png:
         fname = 'probabilities_all_runs.png'
         savefig(fname, bbox_inches='tight')
-        print 'Created ', fname
+        print ('Created ', fname)
 
     figure(201, figsize=(9,6))
     clf()
@@ -279,16 +279,17 @@ for cluster_vars in cluster_vars_list:
     if save_png:
         fname = 'probabilities_%s.png' % scenario_name
         savefig(fname, bbox_inches='tight')
-        print 'Created ', fname
+        print ('Created ', fname)
 
-    print "\nEvents to use and clustered probability:"
+    print ("\nEvents to use and clustered probability:")    
+    
     for jcluster in range(n_clusters):
         j = jsort[jcluster]
         indices = events_cluster[j]
         jsample = sample_event_cluster[j]
-        print "Event %s: %s, prob = %7.5f, (%s events in cluster)" \
+        print ("Event %s: %s, prob = %7.5f, (%s events in cluster)" \
             % (str(jsample).rjust(3), events_description[jsample], \
-            prob_cluster[j], str(len(indices)).rjust(3))
+            prob_cluster[j], str(len(indices)).rjust(3)))
 
     if make_files:
 
@@ -319,7 +320,7 @@ for cluster_vars in cluster_vars_list:
                 cluster_file.write( "   Event %s: %s, prob = %7.5f\n" \
                     % (str(i).rjust(3), events_description[i], events_prob[i]))
         cluster_file.close()
-        print "\nCreated ", fname
+        print ("\nCreated ", fname)
 
         # Create scenario file with columns   Mw, runno, probability
         # Order by Mw and then runno
@@ -333,7 +334,7 @@ for cluster_vars in cluster_vars_list:
             scenario_file.write( "%3.1f  %3i  %10.8f\n" \
                 % (events_Mw[jsample], events_runno[jsample], prob_cluster[j]))
         scenario_file.close()
-        print "\nCreated ", fname
+        print ("\nCreated ", fname)
 
         # Create files for Loyce's code:
 
@@ -354,7 +355,7 @@ for cluster_vars in cluster_vars_list:
             for i in indices:
                 cluster_file.write( "%s\n" % events_description2[i])
         cluster_file.close()
-        print "\nCreated ", fname
+        print ("\nCreated ", fname)
 
 
 #show()
