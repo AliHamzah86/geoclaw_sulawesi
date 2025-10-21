@@ -10,6 +10,11 @@ import matplotlib.pyplot as pl
 import pickle
 import time, datetime
 
+DRIVER_HOME = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.normpath(os.path.join(DRIVER_HOME, '..', 'DataFiles'))
+OUTPUT_BASE = os.path.normpath(os.path.join(DRIVER_HOME, '..', 'geoclaw_output'))
+DEFAULT_COMMON_PATH = os.path.join(OUTPUT_BASE, 'common')
+
 
 # ==============================================================================
 #  Drom Class
@@ -23,7 +28,7 @@ class Drom(object):
 
     """
 
-    def __init__(self, path_common='../geoclaw_output/common', input_type='slip', drom_type=None):
+    def __init__(self, path_common=DEFAULT_COMMON_PATH, input_type='slip', drom_type=None):
         r"""
         initialize class
 
@@ -36,7 +41,7 @@ class Drom(object):
         
         r"""
 
-        self.path_common = path_common      # set common path
+        self.path_common = os.path.abspath(path_common)      # set common path
         self.GeoClawInput = GeoClawInput()
         self.GeoClawInput.path_common = self.path_common 
         self.input_list = []
@@ -1585,5 +1590,3 @@ class Eta_max(object):
         self.eta_max = None
         self.run_id = None
         self.gauge_id = None
-
-

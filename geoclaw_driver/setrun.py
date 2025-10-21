@@ -10,6 +10,8 @@ except:
 scratch_dir = os.path.join(CLAW, 'geoclaw', 'scratch')
 driver_home = os.getcwd()      # directory where all runs will be done
 
+# Shared data locations (mirror run_scenario.py defaults)
+DATA_DIR = os.path.normpath(os.path.join(driver_home, '..', 'DataFiles'))
 
 #------------------------------
 def setrun_coarse(setgeo,claw_pkg='geoclaw'):
@@ -467,8 +469,8 @@ def setgeo_coarse(rundata):
     # == settopo.data values ==
 
     # where to find etopo1 topography:
-    etopo_dir = driver_home
-    topodir = driver_home   # for other topo files
+    etopo_dir = DATA_DIR
+    topodir = DATA_DIR   # for other topo files
 
     topofiles = rundata.topo_data.topofiles
     # for topography, append lines of the form
@@ -476,7 +478,7 @@ def setgeo_coarse(rundata):
 
     topofiles.append([3, 1, 4, 0., 1.e10, \
             os.path.join(etopo_dir, 'etopo1_-130_-124_38_45_1min.asc')])
-    topofiles.append([-3, 3, 4, 0., 1.e10, \
+    topofiles.append([3, 3, 4, 0., 1.e10, \
             os.path.join(topodir, 'cc-1sec.asc')])
 
     # == setdtopo.data values ==
@@ -552,5 +554,3 @@ def setgeo_coarse(rundata):
     return rundata
     # end of function setgeo
     # ----------------------
-
-
