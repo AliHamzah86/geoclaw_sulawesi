@@ -14,7 +14,7 @@ driver_home = os.getcwd()      # directory where all runs will be done
 DATA_DIR = os.path.normpath(os.path.join(driver_home, '..', 'DataFiles'))
 
 #------------------------------
-def setrun_coarse(setgeo,claw_pkg='geoclaw'):
+def setrun(setgeo,claw_pkg='geoclaw'):
 #------------------------------
 
     """
@@ -75,14 +75,9 @@ def setrun_coarse(setgeo,claw_pkg='geoclaw'):
     clawdata.lower[1] = 38.5          # ylower
     clawdata.upper[1] = 44.5          # yupper
     
-    # # Number of grid cells:
-    # clawdata.num_cells[0] =  8      # mx
-    # clawdata.num_cells[1] = 12      # my
-
-    # test with very coarse grid
-    clawdata.num_cells[0] =  4      # mx
-    clawdata.num_cells[1] =  6      # my
-    
+    # Number of grid cells:
+    clawdata.num_cells[0] =  8      # mx
+    clawdata.num_cells[1] = 12      # my
 
     # ---------------
     # Size of system:
@@ -273,7 +268,6 @@ def setrun_coarse(setgeo,claw_pkg='geoclaw'):
         gauges.append([gaugeno, xg[j], yg[j], t_harbor, 1.e10])
 
 
-
     # horizontal transects to open ocean
     gauges.append([501, -124.3, 41.5, t_shelf, 1.e10])
     gauges.append([502, -124.5, 41.5, t_shelf, 1.e10])
@@ -314,7 +308,6 @@ def setrun_coarse(setgeo,claw_pkg='geoclaw'):
     gauges.append([614, -124.19812103, 41.74777778, t_shelf, 1.e10])
     gauges.append([615, -124.21060714, 41.7572685 , t_shelf, 1.e10])
                         
-
                   
     # --------------
     # Checkpointing:
@@ -343,19 +336,17 @@ def setrun_coarse(setgeo,claw_pkg='geoclaw'):
       clawdata.checkpt_interval = 5
 
     
-
     # ---------------
     # AMR parameters:   (written to amr.data)
     # ---------------
     amrdata = rundata.amrdata
 
     # max number of refinement levels:
-    # coarse
     amrdata.amr_levels_max = 4
 
     # List of refinement ratios at each level (length at least amr_level_max-1)
 
-    # coarse grid run = 10"
+    # grid run = 10"
     # dx = 30', 5', 1', 10"
     amrdata.refinement_ratios_x = [6, 5, 6]
     amrdata.refinement_ratios_y = [6, 5, 6]
@@ -406,9 +397,6 @@ def setrun_coarse(setgeo,claw_pkg='geoclaw'):
     regions.append([3, 4, t_harbor, 1e9, -124.26, -124.14, 41.67,   41.79])
     regions.append([4, 4, t_harbor, 1e9, -124.218,-124.17, 41.7345, 41.77])
 
-
-
-
     #  ----- For developers ----- 
     # Toggle debugging print statements:
     amrdata.dprint = False      # print domain flags
@@ -425,11 +413,10 @@ def setrun_coarse(setgeo,claw_pkg='geoclaw'):
     return rundata
 
     # end of function setrun
-    # ----------------------
-
+# ----------------------
 
 #-------------------
-def setgeo_coarse(rundata):
+def setgeo(rundata):
 #-------------------
     """
     Set GeoClaw specific runtime parameters.
@@ -478,15 +465,14 @@ def setgeo_coarse(rundata):
 
     topofiles.append([3, 1, 4, 0., 1.e10, \
             os.path.join(etopo_dir, 'etopo1_-130_-124_38_45_1min.asc')])
-    topofiles.append([3, 3, 4, 0., 1.e10, \
-            os.path.join(topodir, 'cc-1sec.asc')])
+
+    # topofiles.append([3, 3, 4, 0., 1.e10, \
+    #         os.path.join(topodir, 'cc-1sec.asc')])
 
     # == setdtopo.data values ==
+    # for moving topography, append lines of the form: [topotype, minlevel,maxlevel,fname]
     rundata.dtopo_data.dtopofiles = []
     dtopofiles = rundata.dtopo_data.dtopofiles
-    # for moving topography, append lines of the form :  
-    #   [topotype, minlevel,maxlevel,fname]
-
     dtopodir = driver_home
     dtopotype  = 3
     dtopofiles.append([dtopotype, 3, 3, \
@@ -496,54 +482,17 @@ def setgeo_coarse(rundata):
     rundata.qinit_data.qinit_type =  0
     rundata.qinit_data.qinitfiles = []
     qinitfiles = rundata.qinit_data.qinitfiles 
-    # for qinit perturbations, append lines of the form: (<= 1 allowed for now!)
-    #   [minlev, maxlev, fname]
-
-    # == fixedgrids.data values ==   
-    # rundata.fixed_grid_data.fixedgrids = []
-    # fixedgrids = rundata.fixed_grid_data.fixedgrids
-    # for fixed grids append lines of the form
-    # [t1,t2,noutput,x1,x2,y1,y2,xpoints,ypoints,\
-    #  ioutarrivaltimes,ioutsurfacemax]
-
-    # == fgmax.data values ==
-    # fgmax_files = rundata.fgmax_data.fgmax_files
-    # fgmax_grids = rundata.fgmax_data.fgmax_grids
-    # for fixed grids append to this list names of any fgmax input files
-    # fgmax1 = os.path.join(driver_home,'fgmax1_coarse.txt')
-    # fgmax2 = os.path.join(driver_home,'fgmax2_coarse.txt')
-    # fgmax3 = os.path.join(driver_home,'fgmax3_coarse.txt')
-
-    # fgmax1 = {'fgmax_input_file': os.path.join(driver_home, 'fgmax1_coarse.txt')}
-    # fgmax2 = {'fgmax_input_file': os.path.join(driver_home, 'fgmax2_coarse.txt')}
-    # fgmax3 = {'fgmax_input_file': os.path.join(driver_home, 'fgmax3_coarse.txt')}
-
-    # fgmax_files.append(fgmax1_fname)  
-    # fgmax_files.append(fgmax2_fname)  
-    # fgmax_files.append(fgmax3_fname) 
-
-    # fgmax_grids.append(fgmax1)
-    # fgmax_grids.append(fgmax2)
-    # fgmax_grids.append(fgmax3) 
-    
-    # rundata.fgmax_data.num_fgmax_val = 2
-
-# -----------------------
 
     from clawpack.geoclaw import fgmax_tools
 
-    fgmax_grids = rundata.fgmax_data.fgmax_grids
-
     fgmax1 = fgmax_tools.FGmaxGrid()
-    # fgmax1.read_fgmax_txt(os.path.join(driver_home, 'fgmax1_coarse.txt'))
     fgmax1.read_fgmax_grids_data(1, os.path.join(driver_home, 'fgmax1_coarse.txt'))
     fgmax2 = fgmax_tools.FGmaxGrid()
-    # fgmax2.read_fgmax_txt(os.path.join(driver_home, 'fgmax2_coarse.txt'))
     fgmax2.read_fgmax_grids_data(2, os.path.join(driver_home, 'fgmax2_coarse.txt'))
     fgmax3 = fgmax_tools.FGmaxGrid()
-    # fgmax3.read_fgmax_txt(os.path.join(driver_home, 'fgmax3_coarse.txt'))
     fgmax3.read_fgmax_grids_data(3, os.path.join(driver_home, 'fgmax3_coarse.txt'))
 
+    fgmax_grids = rundata.fgmax_data.fgmax_grids
     fgmax_grids.append(fgmax1)
     fgmax_grids.append(fgmax2)
     fgmax_grids.append(fgmax3)

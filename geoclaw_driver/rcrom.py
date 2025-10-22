@@ -24,22 +24,18 @@ class Drom(object):
     r"""
     Delaunay-reversal Reduced Order Model
 
-    
-
     """
 
     def __init__(self, path_common=DEFAULT_COMMON_PATH, input_type='slip', drom_type=None):
         r"""
         initialize class
-
             * set common path (defaults to 'common')
             * initialize GeoClawInput class containing run info
             * set current run_id to zero
             * set pickle filename
             * set default initial time t0
-            * node_id to run_id maps (and vice versa)
-        
-        r"""
+            * node_id to run_id maps (and vice versa)      
+        """
 
         self.path_common = os.path.abspath(path_common)      # set common path
         self.GeoClawInput = GeoClawInput()
@@ -62,7 +58,6 @@ class Drom(object):
         self._node_id2run_id = None         # map node_id to run_id
 
 
-
     def _check_run(self):
         r"""
         check previous run with rundir
@@ -74,12 +69,11 @@ class Drom(object):
             self._runerror_id_list then return True
 
             *else* return False
-        
-        r"""
+       
+        """
 
         value = False     # default return value is False
         
-        #rundir = 'run_' + str(run_id)
         rundir = self.GeoClawInput._rundir
         output_dir = os.path.join(rundir, '_output')
 
@@ -87,8 +81,7 @@ class Drom(object):
         if not os.path.exists(output_dir):
             value = False
             return value
-        
-        
+               
         # count the number of output files needed, depending on output_style
         output_style = self.GeoClawInput._rundata.clawdata.output_style
         if output_style == 1:
@@ -122,10 +115,6 @@ class Drom(object):
                 elif 'fort.q' in output_fname:
                     fortq_fname_list.append(output_fname)
 
-        # sort filenames?
-        #fortt_fname_list.sort()     
-        #fortq_fname_list.sort()     
-
         # check fort.q* fort.t* count then return True if numbers are correct.
         nfortt = len(fortt_fname_list)
         nfortq = len(fortq_fname_list)
@@ -135,8 +124,7 @@ class Drom(object):
         return value
 
 
-
-    def evaluate_hdm(self, save_drom=False, return_grb=False):
+    def evaluate_hdm(self, save_drom=False, return_grb=False, run_tag=None):
         """
         Run GeoClaw with current setup, writing input files,
         handling logs, and optionally returning gauge data.
@@ -147,19 +135,19 @@ class Drom(object):
         rundir = self.GeoClawInput._rundir
         run_id = self.GeoClawInput._run_id
         rundir_full = os.path.join(os.getcwd(), rundir)
+        tag = run_tag if run_tag is not None else f"run_{run_id}"
 
         os.makedirs(rundir, exist_ok=True)
 
         if (self._check_run() and self._continue):
-            print(f"(evaluate_hdm) old run exists, skipping run: {rundir_full}")
+            print(f"{tag} | previous results detected, skipping execution")
+            run_complete = True
         else:
-            # --- Write input files (includes dtopo, fgout, fgmax, plots) ---
-            print("[DEBUG] Writing GeoClaw input files...")
-            self.GeoClawInput.write_files()
+            print(f"{tag} | data/setup phase")
+            self.GeoClawInput.write_files(log_tag=tag)
 
-            # --- Ensure xgeoclaw exists ---
+            # --- Ensure xgeoclaw exists, if does not exists then make new ---
             exe_source = os.path.join(self.path_common, "xgeoclaw")
-            exe_makefile = os.path.join(self.path_common, "Makefile")
             if not os.path.exists(exe_source):
                 os.makedirs(self.path_common, exist_ok=True)
                 os.system(f"cp Makefile {self.path_common}")
@@ -178,6 +166,11 @@ class Drom(object):
                 if os.path.exists(runerrlog_fname):
                     os.rename(runerrlog_fname, runerrlog_fname + ".backup")
 
+            if not os.path.exists(runlog_fname):
+                open(runlog_fname, "w").close()
+            if not os.path.exists(runerrlog_fname):
+                open(runerrlog_fname, "w").close()
+
             # --- Timer ---
             timer_fname = os.path.join(rundir, "xgeoclaw.timer")
             tic = datetime.datetime.now()
@@ -193,11 +186,10 @@ class Drom(object):
                 os.makedirs(output_dir, exist_ok=True)
                 if os.path.exists(src_dtopo):
                     shutil.copy(src_dtopo, dst_dtopo)
-                    print(f"[DEBUG] Copied dtopo.data → {dst_dtopo}")
                 else:
-                    print(f"[WARNING] Missing dtopo.data in {rundir}")
+                    print(f"{tag} | warning: missing dtopo.data in {rundir}")
             except Exception as e:
-                print(f"[ERROR] Could not copy dtopo.data: {e}")
+                print(f"{tag} | error copying dtopo.data: {e}")
 
             # --- Ensure Makefile is present in rundir ---
             makefile_src = os.path.join(self.path_common, "Makefile")
@@ -205,12 +197,11 @@ class Drom(object):
             if not os.path.exists(makefile_dst):
                 if os.path.exists(makefile_src):
                     shutil.copy(makefile_src, makefile_dst)
-                    print(f"[DEBUG] Copied Makefile → {makefile_dst}")
                 else:
-                    print(f"[WARNING] Missing Makefile in {self.path_common}")
+                    print(f"{tag} | warning: missing Makefile in {self.path_common}")
 
             # --- Run xgeoclaw ---
-            print(f"[INFO] Starting xgeoclaw simulation in {rundir} >>>")
+            print(f"{tag} | Running GeoClaw in {rundir} ...")
 
             import subprocess
 
@@ -234,7 +225,7 @@ class Drom(object):
 
                 if os.path.exists(src_dtopo):
                     shutil.copy(src_dtopo, dst_dtopo)
-                    print(f"[FIX] Re-copied dtopo.data → {dst_dtopo} after make cleaned _output/")
+                    print(f"{tag} | retry: refreshed dtopo.data")
                     with open(log_path, "a") as out, open(err_path, "a") as err:
                         ret = subprocess.run(
                             ["make", "output"],
@@ -243,7 +234,7 @@ class Drom(object):
                             stderr=subprocess.DEVNULL
                         ).returncode
                 else:
-                    print(f"[WARNING] Could not retry: missing {src_dtopo}")
+                    print(f"{tag} | warning: retry failed, missing {src_dtopo}")
 
             # If Fortran failed due to missing dtopo.data, copy it again and retry once
             if ret != 0:
@@ -253,10 +244,10 @@ class Drom(object):
 
                 if os.path.exists(src_dtopo):
                     shutil.copy(src_dtopo, dst_dtopo)
-                    print(f"[FIX] Re-copied dtopo.data → {dst_dtopo} after make cleaned _output/")
+                    print(f"{tag} | retry: refreshed dtopo.data")
                     ret = os.system(f"cd {rundir}; make output 1> xgeoclaw.log 2> xgeoclaw.errlog")
                 else:
-                    print(f"[WARNING] Could not retry: missing {src_dtopo}")
+                    print(f"{tag} | warning: retry failed, missing {src_dtopo}")
 
             toc = datetime.datetime.now()
             with open(timer_fname, "a") as timer_file:
@@ -266,24 +257,24 @@ class Drom(object):
             # --- Check completion ---
             run_complete = self._check_run()
             if run_complete:
-                print(f"[INFO] Run completed successfully in {rundir}")
+                print(f"{tag} | GeoClaw run completed successfully")
             else:
-                print(f"[ERROR] xgeoclaw failed in {rundir}, check xgeoclaw.errlog")
+                print(f"{tag} | GeoClaw run failed, see xgeoclaw.errlog")
                 errlog = os.path.join(rundir, "xgeoclaw.errlog")
                 if os.path.exists(errlog):
                     with open(errlog, "r") as f:
                         tail = f.readlines()[-10:]
-                    print("[ERROR] Last 10 lines of xgeoclaw.errlog:")
+                    print(f"{tag} | last lines from xgeoclaw.errlog:")
                     for line in tail:
                         print(line.strip())
-                return None  # early exit if failed
+                raise RuntimeError("GeoClaw execution failed")
             
             # --- Check fort.amr for warnings/errors ---
             fort_amr = os.path.join(rundir, "_output", "fort.amr")
             if os.path.exists(fort_amr):
                 with open(fort_amr, "r") as f:
                     tail = f.readlines()[-20:]
-                print("[INFO] Tail of _output/fort.amr (last 20 lines):")
+                print(f"{tag} | tail of _output/fort.amr (last 20 lines):")
                 for line in tail:
                     print(line.rstrip())
         
@@ -305,12 +296,10 @@ class Drom(object):
 
         def evaluate(self, m, response_type='gauge'):
             r"""
-            evaluate reduced order model. 
-
+            evaluate reduced order model [ROM]. 
             call self._delaunay.transform to find barycentric coordinates
             use self.read_gauge_response() and self._linear_comb()
-            to compute gauge_response
-                
+            to compute gauge_response              
             """
 
             if self._delaunay == None:
@@ -319,7 +308,6 @@ class Drom(object):
                 self.update_delaunay()
 
             # compute barycentric coordinates
-
             ndim = self.GeoClawInput.input_dim
             simplex_no = self._delaunay.find_simplex(m)
             nodes = self._delaunay.simplices[simplex_no]
@@ -469,7 +457,6 @@ class Drom(object):
     
     def update_delaunay_special(self, sub_run_id_list):
         r"""
-
         update delaunay with only subset of run points
 
         """
@@ -657,7 +644,7 @@ class Drom(object):
             else:
                 print('(manual_interp) new input is different: ' \
                         + 'reconcile different inputs first.')
-                raise StandardError 
+                raise RuntimeError('manual_interp: input list differs from existing file')
         else: 
             if not os.path.exists(self.path_common):
                 print('(manual_interp) creating path: ' + self.path_common)
@@ -1104,7 +1091,7 @@ class GeoClawInput(object):
             self._KL_recalculate = False
 
 
-    def write_files(self, rundir=None):
+    def write_files(self, rundir=None, log_tag=None):
         """
         Write all GeoClaw input files, fgmax/fgout data, and generate dtopo + plots.
         Ensures compatibility with evaluate_hdm.
@@ -1117,11 +1104,13 @@ class GeoClawInput(object):
             rundir = self._rundir
         if not os.path.exists(rundir):
             os.makedirs(rundir)
-            print(f"[DEBUG] Created run directory {rundir}")
+            if log_tag:
+                print(f"{log_tag} | created run directory {rundir}")
 
         # --- 1. Write standard .data files ---
         self._rundata.write(out_dir=rundir)
-        print(f"[DEBUG] Wrote standard .data files into {rundir}")
+        if log_tag:
+            print(f"{log_tag} | wrote standard GeoClaw data files")
 
         # --- 2. Verify required .data files ---
         for fname in [
@@ -1130,41 +1119,32 @@ class GeoClawInput(object):
             "multilayer.data", "topo.data", "surge.data"
         ]:
             fpath = os.path.join(rundir, fname)
-            if os.path.exists(fpath):
-                print(f"[DEBUG] Verified {fname}")
-            else:
-                print(f"[WARNING] {fname} not found in {rundir}")
+            if not os.path.exists(fpath):
+                warn_tag = log_tag if log_tag else "GeoClawInput"
+                print(f"{warn_tag} | warning: {fname} not found in {rundir}")
 
-        # --- 3. FGout and FGmax info ---
-        if hasattr(self._rundata, "fgout_data"):
-            print(f"[DEBUG] FGout grids in rundata: {self._rundata.fgout_data.fgout_grids}")
-        if hasattr(self._rundata, "fgmax_data"):
-            print(f"[DEBUG] FGmax grids in rundata: {self._rundata.fgmax_data.fgmax_grids}")
-
-        # --- 4. Ensure xgeoclaw binary is available ---
+        # --- 3. Ensure xgeoclaw binary is available ---
         exe = os.path.join(rundir, "xgeoclaw")
         driver_home = os.getcwd()
         if not os.path.exists(exe):
             src_exe = os.path.join(driver_home, "xgeoclaw")
             if os.path.exists(src_exe):
                 shutil.copy(src_exe, exe)
-                print(f"[DEBUG] Copied xgeoclaw → {exe}")
             else:
-                print(f"[WARNING] xgeoclaw not found in {driver_home}")
-        else:
-            print(f"[DEBUG] xgeoclaw already present in {rundir}")
+                warn_tag = log_tag if log_tag else "GeoClawInput"
+                print(f"{warn_tag} | warning: xgeoclaw not found in {driver_home}")
 
-        # --- 5. Generate dtopo and plots ---
+        # --- 4. Generate dtopo and plots ---
         dtopo_fname = os.path.join(rundir, "dtopo.tt3")
         dtopo_plot_fname = os.path.join(rundir, "dtopo_plot.png")
         subfaults_plot_fname = os.path.join(rundir, "subfaults_plot.png")
 
-        # Create dtopography
-        print("[DEBUG] Creating dtopo...")
+        # --- 5. Create dtopography ---
         x, y = self.fault.create_dtopo_xy()
         self.dtopo = self.fault.create_dtopography(x, y, times=[1.0])
         self.dtopo.write(dtopo_fname, dtopo_type=3)
-        print(f"[DEBUG] Wrote dtopo file {dtopo_fname}")
+        if log_tag:
+            print(f"{log_tag} | generated dtopo file")
 
         # save plot of subfaults
         fig0,ax0 = pl.subplots()
@@ -1180,19 +1160,15 @@ class GeoClawInput(object):
 
         # Recalculate KL expansion if needed
         if hasattr(self, "_KL_reexpand"):
-            print("[DEBUG] Recomputing KL expansion...")
             self._KL_reexpand()
 
         # --- 6. Write dtopo.data properly for GeoClaw ---
-        # Configure BEFORE writing to ensure dt_max_dtopo is saved
         dtopo_type = 3  # Okada model
         self._rundata.dtopo_data.dtopofiles = [[dtopo_type, 'dtopo.tt3']]
-        # self._rundata.dtopo_data.dtopofiles.append([dtopo_type, 'dtopo.tt3'])        
-        # self._rundata.dtopo_data.dt_max_dtopo = 0.2       # in setrun we set 1e+99
 
-        print(f"[DEBUG] Writing GeoClaw input files → {rundir}")
         self._rundata.write(out_dir=rundir)
-        print(f"[DEBUG] Updated dtopo.data written with dt_max_dtopo = 0.2")
+        if log_tag:
+            print(f"{log_tag} | finalized GeoClaw input set")
 
         # --- 7. Ensure all .data files exist in _output for xgeoclaw ---
         output_dir = os.path.join(rundir, "_output")
@@ -1211,14 +1187,11 @@ class GeoClawInput(object):
             dst = os.path.join(output_dir, fname)
             if os.path.exists(src):
                 shutil.copy(src, dst)
-            elif os.path.exists(dst):
-                # already there, fine
-                continue
+            elif os.path.exists(dst):              
+                continue  # file already exists in _output
             else:
-                print(f"[WARNING] Missing {fname} in {rundir} and _output")
-
-        print(f"[DEBUG] Copied all .data files into {output_dir}")
-
+                warn_tag = log_tag if log_tag else "GeoClawInput"
+                print(f"{warn_tag} | warning: missing {fname} for GeoClaw output directory")
        
           
     def compute_subfault_distances(self,fault):
@@ -1294,11 +1267,8 @@ class GeoClawInput(object):
         performs KL expansion using spatial correlation designated by
         Lstrike and Ldip
 
-
         set self._KL_nterms = nterms after the expansion.
-
         H: Hurst exponent
-
         REQUIRES slip_tools
 
         TODO: more reasonable defaults for Lstrike and Ldip
@@ -1569,8 +1539,6 @@ class Eta_max_bundle(object):
                 self._xy_list.append(xy)
                 self._gauge_id_list.append(self.response_list[j].gauge_id)
     
-
-
 
 # ==============================================================================
 #  Eta_max Class

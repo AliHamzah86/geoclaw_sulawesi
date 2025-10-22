@@ -49,18 +49,27 @@ MAG_OUTPUT_DIR = {
     9.0: 'Mw_90',
 }
 
+
+def magnitude_tag(mw):
+    return MAG_OUTPUT_DIR[mw]
+
+
+def format_run_tag(mw, scenario_index, run_id):
+    mag_key = magnitude_tag(mw)
+    return f"[{mag_key} run_{scenario_index} -> RUN-{run_id:03d}]"
+
 # ==============================================================================
-# setrun, setgeo for the coarse grid runs are defined in setrun.py
+# setrun, setgeo for the grid runs are defined in setrun.py
 #
-#    setrun_coarse
-#    setgeo_coarse
+#    setrun
+#    setgeo
 #
 # these set as the default template, then the iteration function for the
 # GeoClawInput class is used to appropriately change the settings,
 # e.g., fine grid runs, earthquake magnitudes, run to final time, etc.
 # ==============================================================================
 
-from setrun import setrun_coarse, setgeo_coarse
+from setrun import setrun, setgeo
 
 # ==============================================================================
 # Fault configuration constants and helpers
@@ -139,7 +148,6 @@ def describe_run(run_id, M):
     total_runs = len(MAGNITUDES) * M
     metadata = {
         "run_id": run_id,
-        "grid": "coarse",
         "mw": 0.0,
         "scenario": None,
         "rundir": None,
@@ -155,9 +163,11 @@ def describe_run(run_id, M):
 
     metadata["scenario"] = scenario_index
     metadata["mw"] = Mw
+    metadata["mag_tag"] = magnitude_tag(Mw)
+    metadata["tag"] = format_run_tag(Mw, scenario_index, run_id)
 
     label = f"Mw {Mw:.1f}"
-    out_dir = os.path.join(OUTPUT_BASE, MAG_OUTPUT_DIR[Mw])
+    out_dir = os.path.join(OUTPUT_BASE, metadata["mag_tag"])
     metadata["label"] = label
     metadata["rundir"] = os.path.join(out_dir, f"run_{scenario_index}")
 
@@ -166,7 +176,7 @@ def describe_run(run_id, M):
 
 def parse_cli_args():
     parser = argparse.ArgumentParser(
-        description="Run GeoClaw CC CSZ South scenarios in test or full mode (coarse only)."
+        description="Run GeoClaw scenarios in test or full mode."
     )
     parser.add_argument(
         "--mode",
@@ -284,27 +294,27 @@ def iter_fun(self):
         raise StopIteration()
 
     else:
-        
+        run_id_mod = run_id % M
+        mag_index = run_id // M
+        self.KL_Mw_desired = MAGNITUDES[mag_index]
+        run_tag = format_run_tag(self.KL_Mw_desired, run_id_mod, run_id)
+
         #=========================
-        # set coarse and fine grids
+        # set grid configurations
         #
         t_shelf = 0.   # time approaching continental slope
         t_harbor = 0.  # time approaching harbor
 
-        #------------------
-        # setrun for coarse grid only
-        #
-        grid = 'coarse'
-        self._rundata = setrun_coarse(setgeo_coarse)   # includes fgmax setup
+        self._rundata = setrun(setgeo)   # includes fgmax setup
 
         self._rundata.amrdata.amr_levels_max = 4
-        # coarse grid run = 10sec
+        # grid run = 10sec
         # dx = 30min, 5min, 1min, 10sec
         self._rundata.amrdata.refinement_ratios_x = [6, 5, 6]
         self._rundata.amrdata.refinement_ratios_y = [6, 5, 6]
         self._rundata.amrdata.refinement_ratios_t = [6, 5, 6]
 
-        # add topography (coarse)
+        # add topography
         topofiles = self._rundata.topo_data.topofiles
         # for topography, append lines of the form
         #    [topotype, minlevel, maxlevel, t1, t2, fname]
@@ -330,31 +340,23 @@ def iter_fun(self):
         # check that topo files exist
         for _, _, _, _, _, f in topofiles:
             if not os.path.exists(f):
-                print(f"[FATAL] Topography file missing: {f}")
+                print(f"{run_tag} | missing topography file: {f}")
                 raise FileNotFoundError(f)
 
-            
-        #
-        # set desired magnitude
-        #
-        mag_index = run_id // M
-        self.KL_Mw_desired = MAGNITUDES[mag_index]
-        
         #
         # set slip distribution
         #
         # run_id_mod = run_id - 100*(run_id/100)
-        run_id_mod = run_id % M  # stay within available scenarios
         m = scn_list[run_id_mod]
         self.set_KL_slip(m)
-
-        dir_grid_Mw = os.path.join(OUTPUT_BASE, MAG_OUTPUT_DIR[self.KL_Mw_desired])
+    
+        dir_grid_Mw = os.path.join(OUTPUT_BASE, magnitude_tag(self.KL_Mw_desired))
         os.makedirs(dir_grid_Mw, exist_ok=True)
         self._rundir = os.path.join(dir_grid_Mw, 'run_' + str(run_id_mod))
         
         # --- Compact progress info (after Mw assigned) ---
         if getattr(self, "_progress_enabled", True):
-            print(f"[INFO] Case {run_id + 1} / {N} | run_id = {run_id} | Mw = {self.KL_Mw_desired}")
+            print(f"{run_tag} scheduled ({run_id + 1}/{N})")
             
         self._run_id += 1
         
@@ -366,7 +368,7 @@ def create_configured_drom(scenario_points):
     drom = rcrom.Drom()
     drom.GeoClawInput.fault = copy.deepcopy(get_fault())
     drom.GeoClawInput.set_iter(iter_fun)
-    drom.GeoClawInput.set_rundata(setrun=setrun_coarse, setgeo=setgeo_coarse)
+    drom.GeoClawInput.set_rundata(setrun=setrun, setgeo=setgeo)
     drom.GeoClawInput.KL_expand(Lstrike=LSTRIKE, Ldip=LDIP,
                 distribution='Lognormal', tau=depth_taper,
                 nterms=20, KL_Mw_desired=9.0)
@@ -389,6 +391,7 @@ def run_cases_sequential(run_ids, driver_path, scenario_points):
         pass
 
     drom = create_configured_drom(scenario_points)
+    scenario_count = len(scenario_points) if scenario_points is not None else 0
     drom.GeoClawInput._progress_enabled = False
 
     for geoinput in drom.GeoClawInput:
@@ -399,6 +402,8 @@ def run_cases_sequential(run_ids, driver_path, scenario_points):
 
         run_dir = geoinput._rundir
         Mw = geoinput.KL_Mw_desired
+        run_id_mod = current_id % scenario_count if scenario_count else current_id
+        run_tag = format_run_tag(Mw, run_id_mod, current_id)
 
         orig_geo_id = drom.GeoClawInput._run_id
         orig_drom_id = drom._run_id
@@ -407,16 +412,13 @@ def run_cases_sequential(run_ids, driver_path, scenario_points):
 
         start = time.perf_counter()
         try:
-            print(f"[RUN-{current_id:03d}] Starting GeoClaw in {run_dir} (Mw={Mw})")
-            drom.evaluate_hdm()
+            drom.evaluate_hdm(run_tag=run_tag)
             duration = time.perf_counter() - start
-            print(f"[RUN-{current_id:03d}] Completed successfully in {run_dir} "
-                  f"({format_duration(duration)})")
+            print(f"{run_tag} | completed in {format_duration(duration)}")
             results.append((current_id, "OK", duration))
         except Exception as exc:
             duration = time.perf_counter() - start
-            print(f"[RUN-{current_id:03d}] FAILED in {run_dir}: {exc} "
-                  f"({format_duration(duration)})")
+            print(f"{run_tag} | failed: {exc} ({format_duration(duration)})")
             results.append((current_id, f"FAIL: {exc}", duration))
         finally:
             drom.GeoClawInput._run_id = orig_geo_id
@@ -454,7 +456,7 @@ if __name__=='__main__':
     try:
         scn = np.loadtxt(scn_path)
     except OSError as err:
-        print(f"[ERROR] Failed to read scenario file {scn_path}: {err}")
+        print(f"Error reading scenario file {scn_path}: {err}")
         sys.exit(1)
 
     if isinstance(scn, np.ndarray):
@@ -469,7 +471,7 @@ if __name__=='__main__':
 
     M = len(scn_list)
     if M == 0:
-        print("[ERROR] Scenario list is empty.")
+        print("Error: scenario list is empty.")
         sys.exit(1)
 
     total_runs = len(MAGNITUDES) * M
@@ -478,12 +480,11 @@ if __name__=='__main__':
     if args.mode == "test":
         ntest = max(1, min(args.n_test, total_runs))
         selected_run_ids, mag_counts = select_balanced_test_runs(M, ntest)
-        count_text = ", ".join(f"Mw {mw:.1f}: {cnt}" for mw, cnt in sorted(mag_counts.items()))
-        print(f"[INFO] Test mode: selected {len(selected_run_ids)} run(s) "
-              f"with distribution [{count_text}]")
+        count_text = ", ".join(f"{magnitude_tag(mw)}: {cnt}" for mw, cnt in sorted(mag_counts.items()))
+        print(f"Mode test | {len(selected_run_ids)} run(s) selected [{count_text}]")
     else:
         selected_run_ids = all_run_ids
-        print(f"[INFO] All mode: scheduling all {total_runs} run(s).")
+        print(f"Mode all | scheduling {total_runs} run(s).")
 
     required_dirs = {os.path.join(OUTPUT_BASE, 'common')}
     required_dirs.update(os.path.join(OUTPUT_BASE, name) for name in MAG_OUTPUT_DIR.values())
@@ -491,32 +492,30 @@ if __name__=='__main__':
         os.makedirs(path, exist_ok=True)
 
     if not selected_run_ids:
-        print("[ERROR] No runs selected.")
+        print("Error: no runs selected.")
         sys.exit(1)
 
-    print("[PLAN] Scheduled runs:")
+    print("Scheduled runs:")
     for rid in selected_run_ids:
         meta = describe_run(rid, M)
-        scenario_str = "-" if meta["scenario"] is None else str(meta["scenario"])
-        print(f"  - run_id {rid:03d} | grid={meta['grid']:<6} | label={meta['label']:<6} "
-              f"| scenario={scenario_str:<3} | rundir={meta['rundir']}")
+        print(f"  {meta['tag']} | directory {meta['rundir']}")
 
     cpu_count = mp.cpu_count()
     max_workers = args.processes if args.processes is not None else min(8, cpu_count)
     if max_workers <= 0:
-        print("[ERROR] Number of processes must be positive.")
+        print("Error: number of processes must be positive.")
         sys.exit(1)
 
     run_chunks = chunk_run_ids(selected_run_ids, max_workers)
     if not run_chunks:
-        print("[ERROR] Failed to partition run IDs for parallel execution.")
+        print("Error: failed to partition run IDs for execution.")
         sys.exit(1)
 
     actual_workers = len(run_chunks)
     if actual_workers == 1:
-        print(f"[INFO] Using sequential execution (CPU count: {cpu_count}).")
+        print(f"Execution mode: sequential (CPU count {cpu_count}).")
     else:
-        print(f"[INFO] Using {actual_workers} parallel worker(s) (CPU count: {cpu_count}).")
+        print(f"Execution mode: {actual_workers} workers (CPU count {cpu_count}).")
 
     worker_args = [(chunk, driver_home, scn_list) for chunk in run_chunks]
 
@@ -535,18 +534,36 @@ if __name__=='__main__':
     total_run_time = sum(duration for _, _, duration in flat_results)
     total_success_time = sum(duration for _, status, duration in flat_results if status == "OK")
 
-    print("\n[SUMMARY]")
-    print(f"  ✅ Successful runs: {ok}")
+    mag_total = {mw: 0 for mw in MAGNITUDES}
+    mag_success = {mw: 0 for mw in MAGNITUDES}
+    for run_id, status, _ in flat_results:
+        meta = describe_run(run_id, M)
+        mw = meta["mw"]
+        mag_total[mw] += 1
+        if status == "OK":
+            mag_success[mw] += 1
+
+    print("\nSummary")
+    print(f"  Successful runs: {ok}")
     if failures:
         for run_id, status, duration in sorted(failures):
-            print(f"  ❌ Run {run_id}: {status} ({format_duration(duration)})")
+            meta = describe_run(run_id, M)
+            print(f"  Failed {meta['tag']}: {status} ({format_duration(duration)})")
     else:
-        print("  ❌ Failed runs: 0")
+        print("  Failed runs: 0")
     if skipped:
-        print(f"  [WARN] Skipped runs: {sorted(run_id for run_id, _, _ in skipped)}")
-    print(f"  ⏱ Total wall time: {format_duration(wall_total)}")
-    print(f"  ⏱ Sum of run durations: {format_duration(total_run_time)}")
+        skipped_tags = [describe_run(run_id, M)['tag'] for run_id, _, _ in skipped]
+        print(f"  Skipped runs: {', '.join(skipped_tags)}")
+    print(f"  Total wall time: {format_duration(wall_total)}")
+    print(f"  Sum of run durations: {format_duration(total_run_time)}")
     if ok:
         avg_duration = total_success_time / ok
-        print(f"  ⏱ Mean successful run: {format_duration(avg_duration)}")
+        print(f"  Mean successful run: {format_duration(avg_duration)}")
+    print("  Cases per magnitude:")
+    for mw in MAGNITUDES:
+        tag = magnitude_tag(mw)
+        total = mag_total.get(mw, 0)
+        success = mag_success.get(mw, 0)
+        plural = "case" if total == 1 else "cases"
+        print(f"    [{tag}]: {total} {plural} ({success} successful)")
     print("--------------------------------------------------")
