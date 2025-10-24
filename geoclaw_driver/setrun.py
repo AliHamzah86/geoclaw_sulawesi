@@ -8,10 +8,12 @@ except:
     raise Exception("*** Must first set CLAW enviornment variable")
 
 scratch_dir = os.path.join(CLAW, 'geoclaw', 'scratch')
-driver_home = os.getcwd()      # directory where all runs will be done
+MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(MODULE_DIR)
+driver_home = PROJECT_ROOT  # directory where all runs will be done
 
 # Shared data locations (mirror run_scenario.py defaults)
-DATA_DIR = os.path.normpath(os.path.join(driver_home, '..', 'DataFiles'))
+DATA_DIR = os.path.join(PROJECT_ROOT, 'DataFiles')
 
 #------------------------------
 def setrun(setgeo,claw_pkg='geoclaw'):
@@ -466,9 +468,6 @@ def setgeo(rundata):
     topofiles.append([3, 1, 4, 0., 1.e10, \
             os.path.join(etopo_dir, 'etopo1_-130_-124_38_45_1min.asc')])
 
-    # topofiles.append([3, 3, 4, 0., 1.e10, \
-    #         os.path.join(topodir, 'cc-1sec.asc')])
-
     # == setdtopo.data values ==
     # for moving topography, append lines of the form: [topotype, minlevel,maxlevel,fname]
     rundata.dtopo_data.dtopofiles = []
@@ -486,11 +485,11 @@ def setgeo(rundata):
     from clawpack.geoclaw import fgmax_tools
 
     fgmax1 = fgmax_tools.FGmaxGrid()
-    fgmax1.read_fgmax_grids_data(1, os.path.join(driver_home, 'fgmax1_coarse.txt'))
+    fgmax1.read_fgmax_grids_data(1, os.path.join(DATA_DIR, 'fgmax1_coarse.txt'))
     fgmax2 = fgmax_tools.FGmaxGrid()
-    fgmax2.read_fgmax_grids_data(2, os.path.join(driver_home, 'fgmax2_coarse.txt'))
+    fgmax2.read_fgmax_grids_data(2, os.path.join(DATA_DIR, 'fgmax2_coarse.txt'))
     fgmax3 = fgmax_tools.FGmaxGrid()
-    fgmax3.read_fgmax_grids_data(3, os.path.join(driver_home, 'fgmax3_coarse.txt'))
+    fgmax3.read_fgmax_grids_data(3, os.path.join(DATA_DIR, 'fgmax3_coarse.txt'))
 
     fgmax_grids = rundata.fgmax_data.fgmax_grids
     fgmax_grids.append(fgmax1)
