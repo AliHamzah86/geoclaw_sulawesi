@@ -9,6 +9,7 @@ writing results beneath ``all_runs_npy_files/Mw_<code>_runs/``.
 from __future__ import annotations
 
 import argparse
+import json
 import glob
 import importlib
 import os
@@ -21,13 +22,35 @@ from scipy.interpolate import interp1d
 from clawpack.geoclaw import fgmax_tools
 
 
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.abspath(os.path.join(SCRIPT_DIR, '..'))
+RUN_CONFIG_PATH = os.path.join(PROJECT_ROOT, 'run_config.json')
+DEFAULT_OUTPUT_BASE = os.path.join(PROJECT_ROOT, 'geoclaw_output')
+
+
 FGMAX_NUMBERS = (1, 2, 3)
-DTOTO_CANDIDATES = [
+DTOPO_CANDIDATES = [
     ("dtopo.tt3", 3),
     ("dtopo1.tt3", 3),
     ("dtopo2.tt3", 3),
     ("dtopo.tt2", 2),
 ]
+
+
+def _resolve_output_base() -> str:
+    output_base = DEFAULT_OUTPUT_BASE
+    try:
+        with open(RUN_CONFIG_PATH, 'r', encoding='utf-8') as handle:
+            config = json.load(handle)
+            if config.get('output_base'):
+                output_base = os.path.normpath(os.path.expanduser(config['output_base']))
+    except FileNotFoundError:
+        pass
+    return output_base
+
+
+CONFIG_OUTPUT_BASE = _resolve_output_base()
+DEFAULT_ALL_RUNS_DIR = os.path.join(CONFIG_OUTPUT_BASE, 'all_runs_npy_files')
 
 
 def parse_args() -> argparse.Namespace:
@@ -49,6 +72,11 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Also create gauge numpy files (disabled by default).",
     )
+    parser.add_argument(
+        "--info",
+        action="store_true",
+        help="Show resolved directories and exit without generating files.",
+    )
     return parser.parse_args()
 
 
@@ -64,7 +92,7 @@ def load_fgmax_grid(run_dir: str, fgno: int) -> fgmax_tools.FGmaxGrid:
 def load_dtopo(rundir: str):
     from clawpack.geoclaw.dtopotools import DTopography
 
-    for fname, topo_type in DTOTO_CANDIDATES:
+    for fname, topo_type in DTOPO_CANDIDATES:
         path = os.path.join(rundir, fname)
         if os.path.exists(path):
             dtopo = DTopography()
@@ -126,8 +154,14 @@ def main() -> None:
     explicit_runs = [int(r) for r in args.runs] if args.runs else None
     gauges_module = None
 
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    geoclaw_output = os.path.abspath(os.path.join(script_dir, '..', 'geoclaw_output'))
+    geoclaw_output = CONFIG_OUTPUT_BASE
+
+    if args.info:
+        print("Configuration summary")
+        print(f"  run_config.json : {RUN_CONFIG_PATH} ({'exists' if os.path.exists(RUN_CONFIG_PATH) else 'missing'})")
+        print(f"  GeoClaw output  : {geoclaw_output}")
+        print(f"  all-runs root   : {DEFAULT_ALL_RUNS_DIR}")
+        return
 
     if not os.path.isdir(geoclaw_output):
         raise FileNotFoundError(f"Expected directory not found: {geoclaw_output}")
@@ -135,7 +169,7 @@ def main() -> None:
     os.chdir(geoclaw_output)
     print(f"Working in directory: {geoclaw_output}")
 
-    all_runs_dir = 'all_runs_npy_files'
+    all_runs_dir = DEFAULT_ALL_RUNS_DIR
     os.makedirs(all_runs_dir, exist_ok=True)
 
     # Crescent City location:

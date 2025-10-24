@@ -11,13 +11,14 @@ For every ``Mw_<code>/run_<id>`` directory discovered beneath
 It supports Clawpack 5.13 layouts, automatically locates dtopo files,
 and tolerates partial test batches where only a handful of runs exist.
 
-Results are written to ``all_runs_npy_files/dtopo_proxies_Mw_<code>.txt``
+Results are written to ``geoclaw_output/all_runs_npy_files/dtopo_proxies_Mw_<code>.txt``
 and a concise summary is printed at the end.
 """
 
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import re
 from collections import defaultdict
@@ -30,6 +31,13 @@ from scipy.interpolate import RectBivariateSpline
 from clawpack.geoclaw import topotools
 
 
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.abspath(os.path.join(SCRIPT_DIR, '..'))
+RUN_CONFIG_PATH = os.path.join(PROJECT_ROOT, 'run_config.json')
+DEFAULT_DATA_DIR = os.path.join(PROJECT_ROOT, 'DataFiles')
+DEFAULT_GEOCLA_OUTPUT = os.path.join(PROJECT_ROOT, 'geoclaw_output')
+
+
 DTOTO_CANDIDATES = [
     ("dtopo.tt3", 3),
     ("dtopo1.tt3", 3),
@@ -39,6 +47,79 @@ DTOTO_CANDIDATES = [
 SUMMARY_HEADER = (
     "run", "dzCC_m", "eta_max_m", "PE_pJ", "dVolume_km3"
 )
+
+
+def _resolve_defaults() -> Tuple[str, str, str, Dict[str, object]]:
+    data_dir = DEFAULT_DATA_DIR
+    output_base = DEFAULT_GEOCLA_OUTPUT
+    config: Dict[str, object] = {}
+
+    try:
+        with open(RUN_CONFIG_PATH, 'r', encoding='utf-8') as handle:
+            config = json.load(handle)
+            if config.get('data_dir'):
+                data_dir = os.path.normpath(os.path.expanduser(config['data_dir']))
+            if config.get('output_base'):
+                output_base = os.path.normpath(os.path.expanduser(config['output_base']))
+    except FileNotFoundError:
+        config = {}
+
+    topo_path: Optional[str] = None
+    topography_entries = config.get('topography') if isinstance(config.get('topography'), list) else []
+    fallback_name = 'etopo1_-130_-124_38_45_1min.asc'
+
+    if isinstance(topography_entries, list):
+        for entry in topography_entries:
+            if not isinstance(entry, dict):
+                continue
+            candidate = entry.get('path')
+            if not candidate:
+                continue
+            candidate_expanded = os.path.expanduser(candidate)
+            if not os.path.isabs(candidate_expanded):
+                candidate_expanded = os.path.normpath(os.path.join(data_dir, candidate_expanded))
+            if os.path.exists(candidate_expanded):
+                topo_path = candidate_expanded
+                break
+
+            alt = os.path.normpath(os.path.join(DEFAULT_DATA_DIR, os.path.basename(candidate_expanded)))
+            if os.path.exists(alt):
+                topo_path = alt
+                break
+
+    if not topo_path:
+        fallback = os.path.join(data_dir, fallback_name)
+        if not os.path.exists(fallback):
+            fallback = os.path.join(DEFAULT_DATA_DIR, fallback_name)
+        topo_path = os.path.normpath(fallback)
+
+    return topo_path, data_dir, output_base, config
+
+
+DEFAULT_TOPO_PATH, CONFIG_DATA_DIR, CONFIG_OUTPUT_BASE, _CONFIG_CONTENT = _resolve_defaults()
+DEFAULT_PROXIES_DIR = os.path.join(CONFIG_OUTPUT_BASE, 'all_runs_npy_files')
+
+
+def resolve_topography_path(path: str) -> str:
+    expanded = os.path.expanduser(path)
+    if os.path.isabs(expanded):
+        return os.path.normpath(expanded)
+
+    search_roots = [
+        CONFIG_DATA_DIR,
+        DEFAULT_DATA_DIR,
+        PROJECT_ROOT,
+    ]
+
+    for root in search_roots:
+        if not root:
+            continue
+        candidate = os.path.normpath(os.path.join(root, expanded))
+        if os.path.exists(candidate):
+            return candidate
+
+    fallback_root = CONFIG_DATA_DIR or DEFAULT_DATA_DIR
+    return os.path.normpath(os.path.join(fallback_root, expanded))
 
 
 def parse_args() -> argparse.Namespace:
@@ -57,13 +138,13 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--topo-file",
-        default="etopo1_-126_-123_40_45_1min.asc",
-        help="Topography file (relative to DataFiles/) for masking (default: %(default)s).",
+        default=DEFAULT_TOPO_PATH,
+        help="Topography file for masking (default: %(default)s).",
     )
     parser.add_argument(
         "--output-dir",
-        default=None,
-        help="Output directory for proxy tables (default: all_runs_npy_files).",
+        default=DEFAULT_PROXIES_DIR,
+        help="Output directory for proxy tables (default: %(default)s).",
     )
     parser.add_argument(
         "--crescent-city",
@@ -72,6 +153,11 @@ def parse_args() -> argparse.Namespace:
         default=(-124.1838, 41.7456),
         metavar=("LON", "LAT"),
         help="Longitude/latitude of Crescent City reference point.",
+    )
+    parser.add_argument(
+        "--info",
+        action="store_true",
+        help="Show resolved defaults (topography, output directories) and exit.",
     )
     return parser.parse_args()
 
@@ -207,11 +293,22 @@ def main() -> None:
     magnitude_filter = set(args.magnitudes) if args.magnitudes else None
     explicit_runs = [int(r) for r in args.runs] if args.runs else None
 
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    geoclaw_output = os.path.abspath(os.path.join(script_dir, '..', 'geoclaw_output'))
-    topo_path = args.topo_file
-    if not os.path.isabs(topo_path):
-        topo_path = os.path.join(script_dir, '..', 'DataFiles', topo_path)
+    geoclaw_output = CONFIG_OUTPUT_BASE
+    topo_path = resolve_topography_path(args.topo_file)
+    output_base = os.path.expanduser(args.output_dir)
+    if not os.path.isabs(output_base):
+        output_base = os.path.normpath(os.path.join(CONFIG_OUTPUT_BASE, output_base))
+
+    if args.info:
+        print("Configuration summary")
+        print(f"  run_config.json : {RUN_CONFIG_PATH} ({'exists' if os.path.exists(RUN_CONFIG_PATH) else 'missing'})")
+        print(f"  data directory  : {CONFIG_DATA_DIR}")
+        print(f"  GeoClaw output  : {geoclaw_output}")
+        print(f"  proxies output  : {output_base}")
+        print(f"  topography file : {topo_path} ({'exists' if os.path.exists(topo_path) else 'missing'})")
+        lon_info, lat_info = args.crescent_city
+        print(f"  Crescent City   : lon={lon_info} lat={lat_info}")
+        return
 
     if not os.path.isdir(geoclaw_output):
         raise FileNotFoundError(f"Expected directory not found: {geoclaw_output}")
@@ -223,7 +320,6 @@ def main() -> None:
     os.chdir(geoclaw_output)
     print(f"Working in directory: {geoclaw_output}")
 
-    output_base = args.output_dir or os.path.join(geoclaw_output, 'all_runs_npy_files')
     os.makedirs(output_base, exist_ok=True)
 
     lon_cc, lat_cc = args.crescent_city
@@ -242,6 +338,9 @@ def main() -> None:
             continue
 
         out_path = os.path.join(output_base, f'dtopo_proxies_{Mw_dir}.txt')
+        if os.path.exists(out_path):
+            os.remove(out_path)
+            print(f"Removed existing file: {out_path}")
         with open(out_path, 'w') as proxyfile:
             proxyfile.write(
                 "  run       dzCC (m)      eta_max (m)      PE (pJ)      dVolume (km^3)\n"
