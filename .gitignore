@@ -1,0 +1,5 @@
+# abaikan semua isi folder _output
+geoclaw_driver/_output/*
+
+# buat folder nya tetap di track
+!geoclaw_driver/_output.gitkeep
