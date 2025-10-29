@@ -1,0 +1,37 @@
+{
+  "clean_output": false,
+  "completed_log": "/home/aila/clawpack_src/sulawesi_sf/geoclaw_output/completed_runs.log",
+  "data_dir": "/home/aila/clawpack_src/sulawesi_sf/DataFiles",
+  "fgmax_files": [
+    {
+      "grid_id": 1,
+      "path": "/home/aila/clawpack_src/sulawesi_sf/DataFiles/fgmax1_coarse.txt"
+    },
+    {
+      "grid_id": 2,
+      "path": "/home/aila/clawpack_src/sulawesi_sf/DataFiles/fgmax2_coarse.txt"
+    },
+    {
+      "grid_id": 3,
+      "path": "/home/aila/clawpack_src/sulawesi_sf/DataFiles/fgmax3_coarse.txt"
+    }
+  ],
+  "max_cases": null,
+  "mode": "test",
+  "n_test": 5,
+  "output_base": "/home/aila/clawpack_src/sulawesi_sf/geoclaw_output",
+  "processes": null,
+  "resume": false,
+  "scenario_file": "/home/aila/clawpack_src/sulawesi_sf/DataFiles/scenario_pts.txt",
+  "seed": 12345,
+  "topography": [
+    {
+      "maxlevel": 4,
+      "minlevel": 1,
+      "path": "/home/aila/clawpack_src/sulawesi_sf/DataFiles/etopo1_-130_-124_38_45_1min.asc",
+      "t1": 0.0,
+      "t2": 10000000000.0,
+      "topotype": 3
+    }
+  ]
+}
