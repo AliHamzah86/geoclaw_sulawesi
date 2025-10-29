@@ -1,10 +1,8 @@
-# Abaikan semua isi folder output dan data besar
-geoclaw_driver/backup/*
+
 geoclaw_driver/_output/*
+geoclaw_driver/backup/*
 geoclaw_driver/DataFiles/*
 geoclaw_driver/KLMEMDOIDS/*
 geoclaw_output/*
 
-# Tapi tetap track file .gitkeep agar folder tetap muncul
-!geoclaw_driver/_output/.gitkeep
 !geoclaw_output/.gitkeep
